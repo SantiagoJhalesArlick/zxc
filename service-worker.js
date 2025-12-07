@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trade-simple-v7'; // NEW CACHE VERSION
+const CACHE_NAME = 'trade-simple-v8'; // FINAL CACHE VERSION
 const urlsToCache = [
-    '/', // Cache the root path
+    '/', 
     '/index.html',
     '/logo.png',
     '/manifest.json',
     'https://cdn.jsdelivr.net/npm/sweetalert2@11' // Cache SweetAlert2
 ];
 
-// Install Event: Caches all necessary assets
+// Install Event
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -21,7 +21,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch Event: Serves files from cache first (Cache-First Strategy)
+// Fetch Event
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
@@ -34,7 +34,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Activate Event: Cleans up old caches (to prevent outdated files from accumulating)
+// Activate Event (Cleanup)
 self.addEventListener('activate', (event) => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
