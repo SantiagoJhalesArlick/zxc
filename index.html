@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade Simple - Risk Calculator</title>
+    
+    <link rel="manifest" href="/manifest.json"> 
+    <link rel="shortcut icon" href="logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="theme-color" content="#2c938c">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        /* --- General Styles --- */
+        :root {
+            --primary-color: #2c938c;
+            --secondary-color: #3f51b5; 
+            --background-color: #f0f8ff;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --input-border: #ccc;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-dark: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        /* --- Layout Container --- */
+        .app-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            margin-top: 50px;
+        }
+
+        /* --- Card Styles (Calculator & History) --- */
+        .card {
+            background-color: var(--card-background);
+            border-radius: 15px;
+            box-shadow: var(--shadow-dark);
+            padding: 30px;
+            width: 100%;
+        }
+
+        .main-calculator {
+            flex: 2;
+        }
+
+        .history-log {
+            flex: 1;
+            max-height: 700px;
+            overflow-y: auto;
+        }
+
+        /* --- Header/Logo --- */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+            background-color: var(--primary-color); 
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        /* --- History Button --- */
+        .history-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        /* --- Form Elements --- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        /* --- Calculation Results --- */
+        .results {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .result-label {
+            font-weight: 500;
+        }
+
+        .result-value {
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        /* --- Buttons --- */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            flex: 1;
+        }
+
+        .btn-calculate {
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-clear {
+            background-color: #f0f0f0;
+            color: var(--text-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-calculate:hover {
+            background-color: #207a73;
+        }
+
+        .btn-clear:hover {
+            background-color: #e0e0e0;
+        }
+
+        .btn-support {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 25px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .btn-support:hover {
+            background-color: #e8e8e8;
+        }
+        
+        /* --- History Log Styles --- */
+        .history-card-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history-item {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 10px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-inputs span {
+            display: block;
+            color: #777;
+        }
+
+        .history-results {
+            margin-top: 5px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        #history-log:empty:before {
+            content: "No calculations yet.";
+            color: #999;
+            font-style: italic;
+            display: block;
+            text-align: center;
+            padding: 50px 0;
+        }
+
+        /* --- Modal Styles (Connect & Download) --- */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--shadow-dark);
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+            color: #999;
+        }
+        
+        .close-btn:hover {
+            color: var(--text-color);
+        }
+
+        .modal-link-item, .modal-download-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            background-color: #f8f8f8;
+            border: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .modal-link-item:hover, .modal-download-item:hover {
+            background-color: #eef;
+            border-color: var(--primary-color);
+        }
+
+        .modal-icon {
+            margin-right: 15px;
+            font-size: 20px;
+        }
+        
+        /* --- Custom Logo Styling --- */
+        .logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                margin-top: 10px;
+            }
+
+            .history-log {
+                max-height: 400px;
+                overflow-y: scroll;
+                display: none; 
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="card main-calculator">
+            
+            <div class="header">
+                <div class="logo-container">
+                    <div class="logo" id="logo-placeholder">
+                        TS 
+                        <img src="logo.png" alt="Trade Simple Logo" onerror="this.parentElement.innerHTML = 'TS'; this.parentElement.style.backgroundColor = '#2c938c';" style="display:none;">
+                    </div>
+                    <span class="logo-text">Trade Simple</span>
+                </div>
+                <button class="history-btn" onclick="toggleHistory()">&#9776;</button>
+            </div>
+
+            <form id="risk-calculator">
+                <div class="form-group">
+                    <label for="portfolio">Total Portfolio Amount ($)</label>
+                    <input type="number" id="portfolio" required placeholder="e.g., 10000" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="stoploss">Stop Loss %</label>
+                    <input type="number" id="stoploss" required placeholder="e.g., 5" min="0" max="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="risklevel">Risk Level %</label>
+                    <input type="number" id="risklevel" required placeholder="e.g., 1" min="0" max="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="leverage">Leverage (x)</label>
+                    <input type="number" id="leverage" required placeholder="e.g., 10" min="1">
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-calculate">
+                        <span class="modal-icon">&#10003;</span> Calculate
+                    </button>
+                    <button type="button" class="btn btn-clear" onclick="clearForm()">
+                        &#8635; Clear
+                    </button>
+                </div>
+            </form>
+
+            <div class="results">
+                <div class="result-item">
+                    <span class="result-label">~Margin ($)</span>
+                    <span class="result-value" id="margin-output">$0.00</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Maximum Loss ($)</span>
+                    <span class="result-value" id="loss-output">$0.00</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Position Size ($)</span>
+                    <span class="result-value" id="position-output">$0.00</span>
+                </div>
+            </div>
+
+            <button class="btn-support" onclick="openModal('connectModal')">
+                &#9733; Support my work
+            </button>
+        </div>
+        
+        <div class="card history-log" id="history-card">
+            <div class="history-card-header">
+                &#128196; Calculation History
+            </div>
+            <ul class="history-list" id="history-log">
+                </ul>
+        </div>
+    </div>
+
+    <div id="connectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Connect with me
+                <button class="close-btn" onclick="closeModal('connectModal')">&times;</button>
+            </div>
+            <a href="#" class="modal-link-item">
+                <span class="modal-icon">📸</span> Instagram
+            </a>
+            <a href="#" class="modal-link-item">
+                <span class="modal-icon">📘</span> Facebook
+            </a>
+            <a href="#" class="modal-link-item">
+                <span class="modal-icon">👥</span> Community Page
+            </a>
+            <a href="#" class="modal-link-item">
+                <span class="modal-icon">🎶</span> Tiktok Page
+            </a>
+            <a href="#" class="modal-link-item">
+                <span class="modal-icon">🪶</span> X Page
+            </a>
+            <button class="btn-support" style="margin-top: 20px;" onclick="openDownloadModal()">
+                &#128229; Download App
+            </button>
+        </div>
+    </div>
+
+    <div id="downloadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Download the App
+                <button class="close-btn" onclick="closeModal('downloadModal')">&times;</button>
+            </div>
+            <p>Get the <strong>Trade Simple</strong> app shortcut on your devices!</p>
+            
+            <button class="modal-download-item" id="pc-download-btn">
+                <span class="modal-icon">💻</span> Download for PC (Windows/Mac)
+            </button>
+            
+            <button class="modal-download-item" id="mobile-download-btn">
+                <span class="modal-icon">📱</span> Download for Mobile (iOS/Android)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global variable to hold the browser's install event
+        let deferredInstallPrompt = null;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const calculatorForm = document.getElementById('risk-calculator');
+            calculatorForm.addEventListener('submit', handleCalculate);
+            loadInitialHistoryState();
+            checkLogoAvailability();
+            setupDownloadLinks();
+            setupServiceWorker(); // <-- Service Worker is now defined and registered INLINE
+            
+            // Listen for the browser's PWA install readiness event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                console.log('beforeinstallprompt event fired and deferred.');
+            });
+        });
+
+        // --- Service Worker Logic (INLINE) ---
+        
+        /**
+         * Defines the Service Worker script as a string.
+         * Version changed to 'v6-inline' to ensure fresh install for all users.
+         */
+        const CACHE_NAME = 'trade-simple-v6-inline'; 
+        const swCode = `
+            const CACHE_NAME = '${CACHE_NAME}';
+            const urlsToCache = [
+                '/', 
+                '/index.html',
+                '/logo.png',
+                '/manifest.json',
+                // Caching SweetAlert2 for faster offline load
+                'https://cdn.jsdelivr.net/npm/sweetalert2@11' 
+            ];
+
+            self.addEventListener('install', (event) => {
+              event.waitUntil(
+                caches.open(CACHE_NAME)
+                  .then((cache) => {
+                    console.log('Service Worker: Caching assets');
+                    return cache.addAll(urlsToCache);
+                  })
+                  .catch(err => {
+                    console.error('Service Worker: Failed to cache assets:', err);
+                  })
+              );
+            });
+
+            self.addEventListener('fetch', (event) => {
+              event.respondWith(
+                caches.match(event.request)
+                  .then((response) => {
+                    if (response) {
+                      return response;
+                    }
+                    return fetch(event.request);
+                  })
+              );
+            });
+
+            self.addEventListener('activate', (event) => {
+              const cacheWhitelist = [CACHE_NAME];
+              event.waitUntil(
+                caches.keys().then((cacheNames) => {
+                  return Promise.all(
+                    cacheNames.map((cacheName) => {
+                      if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        console.log('Service Worker: Deleting old cache: ' + cacheName);
+                        return caches.delete(cacheName); 
+                      }
+                    })
+                  );
+                })
+              );
+            });
+        `;
+
+        /**
+         * Registers the Service Worker using a Blob URL.
+         */
+        function setupServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                // Create a Blob from the SW code string
+                const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                // Create a temporary object URL for the Blob
+                const swUrl = URL.createObjectURL(swBlob);
+                
+                // Register the Service Worker
+                navigator.serviceWorker.register(swUrl, { scope: '/' })
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful (Inline) with scope: ', registration.scope);
+                        if (registration.update) {
+                            registration.update(); 
+                        }
+                    })
+                    .catch(err => {
+                        console.error('ServiceWorker registration failed (Inline): ', err);
+                    });
+            }
+        }
+        
+        // --- Utility Functions ---
+        function checkLogoAvailability() {
+            const logoPlaceholder = document.getElementById('logo-placeholder');
+            const img = logoPlaceholder.querySelector('img');
+            
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                logoPlaceholder.innerHTML = ''; 
+                img.style.display = 'block'; 
+                logoPlaceholder.appendChild(img);
+                logoPlaceholder.style.backgroundColor = 'transparent'; 
+            };
+            tempImg.onerror = () => {
+                logoPlaceholder.style.backgroundColor = 'var(--primary-color)';
+            };
+            tempImg.src = 'logo.png';
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        function toggleHistory() {
+            const historyCard = document.getElementById('history-card');
+            if (window.innerWidth <= 768) {
+                historyCard.style.display = historyCard.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        // --- Calculator, History Logic ---
+        function handleCalculate(e) {
+            e.preventDefault();
+            const portfolio = parseFloat(document.getElementById('portfolio').value);
+            const stoploss = parseFloat(document.getElementById('stoploss').value);
+            const risklevel = parseFloat(document.getElementById('risklevel').value);
+            const leverage = parseFloat(document.getElementById('leverage').value);
+
+            if (isNaN(portfolio) || isNaN(stoploss) || isNaN(risklevel) || isNaN(leverage) || portfolio <= 0 || leverage < 1) {
+                 Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Input',
+                    text: 'Please ensure all fields have valid positive numbers. Leverage must be 1 or greater.',
+                    confirmButtonColor: '#2c938c' 
+                });
+                return;
+            }
+
+            const maxLoss = portfolio * (risklevel / 100);
+            const positionSize = maxLoss / (stoploss / 100);
+            const margin = positionSize / leverage;
+
+            document.getElementById('margin-output').textContent = formatCurrency(margin);
+            document.getElementById('loss-output').textContent = formatCurrency(maxLoss);
+            document.getElementById('position-output').textContent = formatCurrency(positionSize);
+            addToHistory({ portfolio, stoploss, risklevel, leverage, margin, maxLoss, positionSize });
+        }
+
+        function clearForm() {
+            document.getElementById('risk-calculator').reset();
+            document.getElementById('margin-output').textContent = formatCurrency(0);
+            document.getElementById('loss-output').textContent = formatCurrency(0);
+            document.getElementById('position-output').textContent = formatCurrency(0);
+        }
+
+        function addToHistory(data) {
+            const historyLog = document.getElementById('history-log');
+            const historyItem = createHistoryElement(data);
+            historyLog.prepend(historyItem);
+            let history = JSON.parse(localStorage.getItem('tradeSimpleHistory') || '[]');
+            history.unshift(data); 
+            localStorage.setItem('tradeSimpleHistory', JSON.stringify(history));
+        }
+
+        function createHistoryElement(data) {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            const timestamp = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            li.innerHTML = `
+                <div class="history-inputs">
+                    <span>${timestamp} | P: ${formatCurrency(data.portfolio)} | SL: ${data.stoploss}% | R: ${data.risklevel}% | Lev: ${data.leverage}x</span>
+                </div>
+                <div class="history-results">
+                    Loss: ${formatCurrency(data.maxLoss)} | Pos: ${formatCurrency(data.positionSize)} | Margin: ${formatCurrency(data.margin)}
+                </div>
+            `;
+            return li;
+        }
+
+        function loadInitialHistoryState() {
+            const historyLog = document.getElementById('history-log');
+            const history = JSON.parse(localStorage.getItem('tradeSimpleHistory') || '[]');
+            
+            history.forEach(data => {
+                historyLog.appendChild(createHistoryElement(data));
+            });
+
+            if (window.innerWidth <= 768) {
+                document.getElementById('history-card').style.display = 'none';
+            }
+        }
+
+        // --- Modal Logic ---
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function openDownloadModal() {
+            closeModal('connectModal');
+            openModal('downloadModal');
+        }
+
+        // --- PWA Installation Logic ---
+
+        /**
+         * Opens the SweetAlert confirmation, then calls the native prompt.
+         */
+        function handlePCDownloadConfirmation() {
+            closeModal('downloadModal');
+            
+            if (!deferredInstallPrompt) {
+                 // Kung hindi pa handa ang prompt, ipa-refresh ang page
+                 Swal.fire({
+                    title: 'Installation Unavailable',
+                    html: 'The automatic installation prompt is not yet ready, or the app is already installed.<br><br>If not installed, please **refresh the page** and try again.',
+                    icon: 'info',
+                    confirmButtonColor: '#2c938c' 
+                });
+                return;
+            }
+
+            // SweetAlert confirmation (tulad ng CF Stove)
+            Swal.fire({
+                title: 'Install App?',
+                text: 'Add "Trade Simple Calculator" as a standalone app shortcut on your device?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2c938c',
+                cancelButtonColor: '#DB4437',
+                confirmButtonText: 'Yes, Install it!',
+                cancelButtonText: 'No, thanks'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Trigger the native prompt
+                    triggerPWAInstall(); 
+                } else {
+                    Swal.fire({
+                        title: 'Cancelled',
+                        text: 'Installation cancelled.',
+                        icon: 'info',
+                        confirmButtonColor: '#2c938c'
+                    });
+                }
+            });
+        }
+        
+        /**
+         * Triggers the native browser PWA installation prompt.
+         */
+        async function triggerPWAInstall() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                
+                deferredInstallPrompt = null;
+                
+                if (outcome === 'accepted') {
+                    Swal.fire({
+                        title: 'Installation Successful!',
+                        text: 'Look for "Trade Simple Calculator" on your desktop/start menu.',
+                        icon: 'success',
+                        confirmButtonColor: '#2c938c' 
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Installation Cancelled',
+                        text: 'You can try again anytime using the "Download App" button.',
+                        icon: 'warning',
+                        confirmButtonColor: '#2c938c'
+                    });
+                }
+            } else {
+                 Swal.fire({
+                    title: 'Error',
+                    text: 'Installation prompt is not ready. Please refresh the page.',
+                    icon: 'error',
+                    confirmButtonColor: '#2c938c' 
+                });
+            }
+        }
+
+        /**
+         * Sets up the event listeners.
+         */
+        function setupDownloadLinks() {
+            const pcDownloadBtn = document.getElementById('pc-download-btn');
+            const mobileDownloadBtn = document.getElementById('mobile-download-btn');
+            
+            if (pcDownloadBtn) {
+                pcDownloadBtn.addEventListener('click', handlePCDownloadConfirmation);
+            }
+            if (mobileDownloadBtn) {
+                mobileDownloadBtn.addEventListener('click', handlePCDownloadConfirmation);
+            }
+        }
+        
+        // Close modal when clicking outside the content
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
